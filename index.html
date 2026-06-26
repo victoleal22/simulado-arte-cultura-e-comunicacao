@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Estudos - Arte, Cultura e Comunicação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* PALETA DE CORES E VARIÁVEIS */
+        :root {
+            --bg-dark-1: #05081a;
+            --bg-dark-2: #0d1535;
+            --sidebar-bg: rgba(2, 4, 15, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            /* Acentos */
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            
+            --font-main: 'Inter', sans-serif;
+            --sidebar-width: 72px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, var(--bg-dark-1), var(--bg-dark-2));
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* EFEITOS DE BRILHO AMBIENTE (BLOBS) */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .blob-1 {
+            top: -100px; left: -100px;
+            width: 400px; height: 400px;
+            background: var(--accent-blue);
+        }
+        .blob-2 {
+            bottom: -150px; right: -50px;
+            width: 500px; height: 500px;
+            background: var(--accent-purple);
+        }
+
+        /* LAYOUT PRINCIPAL */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* SIDEBAR COMPACTA */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 0;
+            gap: 2rem;
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff; font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        .sidebar-nav {
+            display: flex; flex-direction: column; gap: 1.5rem; width: 100%;
+        }
+        .sidebar-icon {
+            width: 100%; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .sidebar-icon:hover, .sidebar-icon.active {
+            color: var(--accent-blue);
+        }
+        .sidebar-icon.active::before {
+            content: ''; position: absolute;
+            left: 0; top: 10%; height: 80%; width: 4px;
+            background: var(--accent-blue);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 2px 0 8px rgba(59, 130, 246, 0.6);
+        }
+
+        /* ÁREA DE CONTEÚDO */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER / TOPBAR */
+        header.topbar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0; z-index: 90;
+        }
+        .topbar-title h1 {
+            font-size: 1.25rem; font-weight: 700;
+            background: linear-gradient(90deg, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* CHIPS DE FILTRO */
+        .chips-container {
+            position: relative; width: 100%; max-width: 900px;
+            margin: 2rem auto 1rem; display: flex; align-items: center;
+        }
+        .chips-wrapper {
+            display: flex; overflow-x: auto; scroll-behavior: smooth;
+            gap: 0.75rem; padding: 0.5rem 2rem;
+            scrollbar-width: none;
+        }
+        .chips-wrapper::-webkit-scrollbar { display: none; }
+        
+        .chip {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1.25rem;
+            border-radius: 99px;
+            font-family: var(--font-main);
+            font-size: 0.85rem; font-weight: 500;
+            white-space: nowrap; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chip:hover { border-color: var(--accent-blue); color: #fff; }
+        .chip.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* NAVEGAÇÃO CHIPS */
+        .fade-left, .fade-right {
+            position: absolute; top: 0; bottom: 0; width: 40px; pointer-events: none; z-index: 10;
+        }
+        .fade-left { left: 0; background: linear-gradient(to right, var(--bg-dark-1), transparent); }
+        .fade-right { right: 0; background: linear-gradient(to left, var(--bg-dark-1), transparent); }
+        .nav-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: var(--glass-bg); backdrop-filter: blur(4px);
+            border: 1px solid var(--glass-border); color: #fff;
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 20; opacity: 0; transition: opacity 0.3s;
+        }
+        .nav-arrow.visible { opacity: 1; }
+        .nav-arrow:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .nav-left { left: 5px; } .nav-right { right: 5px; }
+
+        /* BARRA DE PROGRESSO E STATUS */
+        .progress-container {
+            max-width: 900px; margin: 0 auto 2rem; padding: 0 2rem; display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .progress-header {
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;
+        }
+        .status-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-weight: 500;
+            font-size: 0.75rem;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .progress-track {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 9999px; height: 6px; overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            height: 100%; width: 0%; transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+        }
+
+        /* ÁREAS MAIN */
+        main { max-width: 900px; margin: 0 auto; padding: 0 2rem 3rem; display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
+        .hidden { display: none !important; }
+
+        /* CARDS (GLASSMORPHISM) */
+        .card, .r-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.4s ease forwards;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Ícone decorativo nos cards */
+        .card::before, .r-card::before {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 100px; height: 100px;
+            background: radial-gradient(circle top right, rgba(139, 92, 246, 0.1), transparent 70%);
+            border-radius: 0 16px 0 100%; pointer-events: none;
+        }
+
+        /* QUESTÕES */
+        .q-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; font-weight: 500; font-size: 0.85rem;
+            color: var(--accent-blue);
+        }
+        .q-text { font-size: 1.1rem; margin-bottom: 1.5rem; font-weight: 400; }
+        
+        .options { display: flex; flex-direction: column; gap: 0.75rem; }
+        .option {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 1rem;
+            cursor: pointer; text-align: left;
+            color: var(--text-main); font-family: var(--font-main);
+            font-size: 0.95rem; transition: all 0.2s;
+            display: flex; align-items: flex-start; gap: 1rem;
+        }
+        .option:hover:not(.locked) {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent-blue);
+        }
+        .option.locked { cursor: default; }
+        
+        .opt-letter {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-muted);
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+        }
+
+        /* ESTADOS DAS OPÇÕES */
+        .option.correct { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-green); }
+        .option.correct .opt-letter { background: var(--accent-green); color: #fff; }
+        .option.correct .opt-text { color: var(--accent-green); font-weight: 500; }
+
+        .option.incorrect { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-red); opacity: 0.8; }
+        .option.incorrect .opt-letter { background: var(--accent-red); color: #fff; }
+        .option.incorrect .opt-text { text-decoration: line-through; color: #fca5a5; }
+
+        .explanation {
+            margin-top: 1.5rem; padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-left: 4px solid var(--accent-purple);
+            border-radius: 0 12px 12px 0;
+            font-size: 0.9rem; color: #cbd5e1;
+            display: none; animation: fadeIn 0.3s;
+        }
+
+        /* RESUMOS */
+        .r-header {
+            font-weight: 700; font-size: 1.2rem; color: var(--accent-blue);
+            margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+        }
+        .r-content ul { list-style: none; }
+        .r-content li {
+            position: relative; padding-left: 1.5rem; margin-bottom: 1rem;
+            font-size: 0.95rem; color: #cbd5e1;
+        }
+        .r-content li::before {
+            content: '✦'; position: absolute; left: 0; color: var(--accent-purple);
+        }
+        .r-content strong { color: #fff; font-weight: 500; }
+
+        /* RESULTADOS / AÇÕES */
+        .result-screen { text-align: center; padding: 3rem 1rem; }
+        .result-circle {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 4px solid var(--accent-green);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem; font-size: 2rem; font-weight: 700;
+            color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+        .result-text { font-size: 1.1rem; margin-bottom: 2rem; color: #cbd5e1; }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            color: #fff; border: none; padding: 0.8rem 2.5rem;
+            border-radius: 99px; font-family: var(--font-main);
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6); }
+
+        /* RESPONSIVO */
+        @media (max-width: 768px) {
+            .app-layout { flex-direction: column; }
+            .sidebar {
+                flex-direction: row; width: 100%; height: 64px;
+                top: auto; bottom: 0; padding: 0 1rem; justify-content: space-around;
+                border-right: none; border-top: 1px solid var(--glass-border); z-index: 100;
+            }
+            .sidebar-logo { display: none; }
+            .sidebar-nav { flex-direction: row; justify-content: space-around; height: 100%; }
+            .sidebar-icon { height: 100%; width: auto; padding: 0 1.5rem; }
+            .sidebar-icon.active::before {
+                top: 0; left: 10%; width: 80%; height: 4px; border-radius: 0 0 4px 4px;
+            }
+            .main-content { margin-left: 0; margin-bottom: 64px; }
+            header.topbar { flex-direction: row; gap: 1rem; padding: 1rem; justify-content: center; }
+            main { padding: 0 1rem 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">A</div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-icon active" id="nav-simulado" onclick="switchView('simulado')" title="Simulado">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <path d="M9 14h6"></path>
+                        <path d="M9 18h6"></path>
+                        <path d="M9 10h.01"></path>
+                    </svg>
+                </div>
+                <div class="sidebar-icon" id="nav-resumo" onclick="switchView('resumo')" title="Módulos (Resumo)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1>Módulos de Estudo</h1>
+                </div>
+            </header>
+
+            <div class="chips-container">
+                <button class="nav-arrow nav-left" onclick="scrollChips(-200)">&#8249;</button>
+                <div class="fade-left"></div>
+                <div class="chips-wrapper" id="chips-wrapper">
+                    </div>
+                <div class="fade-right"></div>
+                <button class="nav-arrow nav-right" onclick="scrollChips(200)">&#8250;</button>
+            </div>
+
+            <div class="progress-container" id="progress-container">
+                <div class="progress-header">
+                    <span id="progress-label">Todas as aulas</span>
+                    <span class="status-badge" id="status-badge">Em andamento</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <main id="simulado-view"></main>
+            <main id="resumo-view" class="hidden"></main>
+        </div>
+    </div>
+
+    <script>
+        const topics = [
+            "Todas", "Aula 01", "Aula 02", "Aula 03", "Aula 04", 
+            "Aula 05", "Aula 06", "Aula 07", "Aula 08", "Aula 09", 
+            "Aula 19", "Texto 01"
+        ];
+
+        const questions = [
+            // Aula 01
+            { id: 1, topic: "Aula 01", text: "De acordo com os conceitos introdutórios, qual das alternativas descreve corretamente uma das funções da arte?", options: [
+                { text: "Copiar exatamente a realidade, sem margem para interpretações subjetivas.", isCorrect: false },
+                { text: "Expressar sentimentos, contar o passado e fazer pensar o presente.", isCorrect: true },
+                { text: "Ignorar as diferenças humanas focando apenas em ideais de beleza técnica.", isCorrect: false },
+                { text: "Substituir os registros históricos textuais por imagens literais.", isCorrect: false }
+            ], explanation: "A arte ajuda a expressar sentimentos, contar o passado, pensar o presente e reconhecer quem somos. A obra 'Abapuru' demonstra que a arte é uma visão de mundo e não precisa mostrar as coisas exatamente como são." },
+            { id: 2, topic: "Aula 01", text: "O que é Estética no campo do estudo da arte?", options: [
+                { text: "A ciência que estuda apenas os padrões de beleza simétricos greco-romanos.", isCorrect: false },
+                { text: "Um método para avaliar o valor financeiro de uma obra em leilões.", isCorrect: false },
+                { text: "A ciência que estuda a técnica e a recepção de uma obra, discutindo conceitos como o bonito e o feio.", isCorrect: true },
+                { text: "A técnica exclusiva de pintura a óleo utilizada após o Renascimento.", isCorrect: false }
+            ], explanation: "A estética é a ciência que estuda a técnica e a recepção de uma obra, problematizando os conceitos do que é considerado bonito ou feio." },
+            
+            // Aula 02
+            { id: 3, topic: "Aula 02", text: "A pintura rupestre possuía 'princípios mágicos'. O que isso significava para os homens pré-históricos?", options: [
+                { text: "Acreditava-se que as pinturas garantiam proteção contra desastres naturais.", isCorrect: false },
+                { text: "Supunham ter poder sobre o animal desde que possuíssem sua imagem.", isCorrect: true },
+                { text: "Eram feitiços desenhados para dominar tribos inimigas.", isCorrect: false },
+                { text: "A pintura era usada exclusivamente como escrita codificada.", isCorrect: false }
+            ], explanation: "Os pintores eram considerados magos, e supunha-se que ter a imagem do animal na parede (como bisões e cavalos) conferia poder sobre ele." },
+            { id: 4, topic: "Aula 02", text: "Quais materiais eram comumente utilizados nas técnicas de pintura rupestre?", options: [
+                { text: "Sangue de animais, carvão, ossos, óxidos minerais e seivas de vegetais.", isCorrect: true },
+                { text: "Tinta a óleo, pigmentos sintéticos e carvão.", isCorrect: false },
+                { text: "Aquarela, ossos moídos e resina de pinheiro.", isCorrect: false },
+                { text: "Cera de abelha misturada com seiva, ouro e sangue.", isCorrect: false }
+            ], explanation: "As técnicas utilizavam elementos da natureza disponíveis na época." },
+            { id: 5, topic: "Aula 02", text: "Qual das opções abaixo cita corretamente as estruturas megalíticas pré-históricas?", options: [
+                { text: "Zigurate, Dólmen e Ushebtis.", isCorrect: false },
+                { text: "Dólmens, Menires e Cromeleques (como o Santuário de Stonehenge).", isCorrect: true },
+                { text: "Menires, Mastabas e Templos jônicos.", isCorrect: false },
+                { text: "Cromeleques, Obeliscos e Vasos Canópicos.", isCorrect: false }
+            ], explanation: "Dólmens (estruturas de mesa), Menires (pedras erguidas isoladas) e Cromeleques (círculos de pedra) formam a arquitetura pré-histórica." },
+
+            // Aula 03
+            { id: 6, topic: "Aula 03", text: "Na arte egípcia antiga, a pintura não utilizava a representação das três dimensões (sem relevo ou claro-escuro). Como era chamada a regra principal aplicada aos corpos desenhados?", options: [
+                { text: "Lei da Perspectiva.", isCorrect: false },
+                { text: "Lei do Contraste.", isCorrect: false },
+                { text: "Lei da Frontalidade.", isCorrect: true },
+                { text: "Lei do Hieratismo.", isCorrect: false }
+            ], explanation: "A 'Lei da Frontalidade' determinava que troncos e olhos fossem desenhados de frente, enquanto a cabeça, pernas e pés eram de perfil." },
+            { id: 7, topic: "Aula 03", text: "Os egípcios utilizavam objetos específicos de cerâmica em seus rituais funerários. O que eram os 'Ushebtis'?", options: [
+                { text: "Vasos que recebiam os órgãos retirados do morto durante a mumificação.", isCorrect: false },
+                { text: "Bustos esculpidos de forma realista para eternizar a figura do faraó.", isCorrect: false },
+                { text: "Miniaturas destinadas a substituir o faraó morto nos trabalhos mais ingratos no além.", isCorrect: true },
+                { text: "Pequenos amuletos na forma de esfinges.", isCorrect: false }
+            ], explanation: "Os Ushebtis eram estatuetas colocadas nos túmulos para trabalhar no lugar do morto na vida após a morte." },
+
+            // Aula 04
+            { id: 8, topic: "Aula 04", text: "A escultura grega do Período Clássico (séc. V-IV a.C.) alcançou o seu apogeu. Qual característica abaixo a define melhor?", options: [
+                { text: "Rigidez absoluta e ausência de movimento.", isCorrect: false },
+                { text: "Glorificação de deuses, heróis e atletas, utilizando a ideia de movimento e proporção ideal.", isCorrect: true },
+                { text: "Realismo dramático, teatral, com expressões faciais de intensa agonia e dor.", isCorrect: false },
+                { text: "Construção baseada na frontalidade divina egípcia.", isCorrect: false }
+            ], explanation: "O Período Clássico traz a harmonia, proporções áureas e o início do movimento (a famosa pose em S). O realismo dramático fica para o Helenístico." },
+            { id: 9, topic: "Aula 04", text: "A arquitetura de templos gregos possuía três 'ordens' principais de colunas e capitéis. Quais eram elas?", options: [
+                { text: "Românico, Gótico e Bizantino.", isCorrect: false },
+                { text: "Dórica, Jônica e Coríntia.", isCorrect: true },
+                { text: "Arcaica, Clássica e Helenística.", isCorrect: false },
+                { text: "Frontal, Monumental e Canópica.", isCorrect: false }
+            ], explanation: "Os capitéis dividiam-se nas ordens Dórica (simples), Jônica (volutas) e Coríntia (folhas de acanto)." },
+
+            // Aula 05
+            { id: 10, topic: "Aula 05", text: "A Arte Romana recebeu forte influência da Arte Etrusca. Quais elementos arquitetônicos derivam dessa influência etrusca?", options: [
+                { text: "O uso das ordens jônica e coríntia.", isCorrect: false },
+                { text: "O uso do arco e da abóbada.", isCorrect: true },
+                { text: "A construção das pirâmides e mastabas.", isCorrect: false },
+                { text: "As rosáceas e gárgulas.", isCorrect: false }
+            ], explanation: "Os romanos incorporaram o conhecimento estrutural dos etruscos, popularizando o arco e a abóbada em suas obras utilitárias." },
+            { id: 11, topic: "Aula 05", text: "Qual era o principal objetivo dos Bustos na escultura romana?", options: [
+                { text: "Representar proporções perfeitas baseadas em cânones genéricos.", isCorrect: false },
+                { text: "Eternizar a pessoa, utilizando realismo extremo para retratar traços físicos e idade.", isCorrect: true },
+                { text: "Glorificar os atletas vencedores com figuras divinas.", isCorrect: false },
+                { text: "Servir como suporte arquitetônico.", isCorrect: false }
+            ], explanation: "A escultura romana buscava o realismo absoluto (marcas de expressão, calvície), diferenciando-se do idealismo e da perfeição grega." },
+
+            // Aula 06
+            { id: 12, topic: "Aula 06", text: "O estilo 'Gótico' surgiu na Idade Média. Originalmente, qual a conotação desse termo?", options: [
+                { text: "Elogiosa, significando proximidade divina e elevação celestial.", isCorrect: false },
+                { text: "Pejorativa, ligada aos 'godos', considerada uma arte 'monstruosa' e 'bárbara' pelos renascentistas.", isCorrect: true },
+                { text: "Técnica, referindo-se ao uso de vitrais e afrescos detalhados.", isCorrect: false },
+                { text: "Matemática, referindo-se ao cálculo preciso das abóbadas.", isCorrect: false }
+            ], explanation: "Artistas do Renascimento achavam as catedrais góticas exageradas e sem as proporções clássicas greco-romanas, taxando a arte de 'bárbara' (referência aos godos)." },
+            { id: 13, topic: "Aula 06", text: "São características fundamentais das Catedrais Góticas:", options: [
+                { text: "Estruturas leves, vitrais coloridos, gárgulas, rosáceas e verticalidade imponente.", isCorrect: true },
+                { text: "Paredes grossas, tetos baixos e arco pleno (românico).", isCorrect: false },
+                { text: "Plantas curtas, ausência de janelas e uso de mosaicos.", isCorrect: false },
+                { text: "Colunas dóricas e abóbadas em berço.", isCorrect: false }
+            ], explanation: "As inovações góticas permitiram afinar as paredes, subir as torres em direção ao céu e rasgar as paredes com grandes vitrais e rosáceas." },
+
+            // Aula 07
+            { id: 14, topic: "Aula 07", text: "Qual destes valores NÃO é próprio do Renascimento (séc XIV a XVI)?", options: [
+                { text: "Humanismo (valorização do homem e da natureza).", isCorrect: false },
+                { text: "Teocentrismo (Deus como medida e centro de tudo).", isCorrect: true },
+                { text: "Antropocentrismo (O homem no centro do universo).", isCorrect: false },
+                { text: "Racionalismo (Razão e ciência).", isCorrect: false }
+            ], explanation: "O Renascimento rompeu com o Teocentrismo medieval para focar no homem (Antropocentrismo) e na racionalidade." },
+            { id: 15, topic: "Aula 07", text: "O que foi o Mecenato durante o Renascimento?", options: [
+                { text: "Técnica de pintura a óleo inventada na época.", isCorrect: false },
+                { text: "O financiamento e proteção de artistas talentosos por nobres, papas e burgueses (Mecenas).", isCorrect: true },
+                { text: "Um tribunal religioso que punia pintores naturalistas.", isCorrect: false },
+                { text: "A guilda exclusiva dos construtores de catedrais.", isCorrect: false }
+            ], explanation: "Famílias ricas e a Igreja financiavam as artes para exibir poder e agregar valor social (Mecenato)." },
+
+            // Aula 08
+            { id: 16, topic: "Aula 08", text: "Quais são características distintivas da pintura Barroca?", options: [
+                { text: "Tons pastéis, linhas leves e simetria rígida.", isCorrect: false },
+                { text: "Ênfase na emoção, excesso de ornamentação e forte contraste claro-escuro.", isCorrect: true },
+                { text: "Uso exclusivo de afrescos pontilhistas.", isCorrect: false },
+                { text: "Corpos serenos e perfil rígido (Lei da Frontalidade).", isCorrect: false }
+            ], explanation: "A arte barroca exacerba o drama, direcionando luz e sombras pesadas para chocar e comover o espectador, em meio à Contrarreforma Católica." },
+            { id: 17, topic: "Aula 08", text: "No Brasil Colônia, o Barroco encontrou seu auge na escultura em pedra-sabão. Quem é o principal representante desse período?", options: [
+                { text: "Jean-Baptiste Debret.", isCorrect: false },
+                { text: "Tarsila do Amaral.", isCorrect: false },
+                { text: "Aleijadinho (Antônio Francisco Lisboa).", isCorrect: true },
+                { text: "Giotto di Bondone.", isCorrect: false }
+            ], explanation: "Aleijadinho esculpiu obras fundamentais como 'Os Doze Profetas' e os 'Passos da Paixão' em Congonhas (MG)." },
+
+            // Aula 09
+            { id: 18, topic: "Aula 09", text: "O Neoclassicismo (1780-1820) surgiu como uma reação ao Barroco/Rococó. Quais eram seus principais temas?", options: [
+                { text: "Hedonismo, lúdico e temas frívolos da nobreza.", isCorrect: false },
+                { text: "Heroísmo, civismo e inspiração nas antigas virtudes greco-romanas.", isCorrect: true },
+                { text: "A arte intensamente religiosa e figuras deformadas.", isCorrect: false },
+                { text: "Cenas do inconsciente e dos sonhos.", isCorrect: false }
+            ], explanation: "Fortemente ligado à Revolução Francesa e às escavações de Pompeia, o Neoclassicismo buscou racionalidade, ordem e virtudes cívicas heroicas." },
+
+            // Aula 19
+            { id: 19, topic: "Aula 19", text: "Na Arte Contemporânea, o movimento em que o artista cria obras utilizando a paisagem externa natural como suporte e tema, necessitando ser registrada por vídeo ou foto, chama-se:", options: [
+                { text: "Videoarte.", isCorrect: false },
+                { text: "Happening.", isCorrect: false },
+                { text: "Land Art.", isCorrect: true },
+                { text: "Site specific.", isCorrect: false }
+            ], explanation: "Land Art modifica a natureza (lagos, montanhas). É efêmera e o registro vira o produto artístico final em galerias." },
+
+            // Texto 01
+            { id: 20, topic: "Texto 01", text: "Segundo o texto de Lúcia Santaella, como a publicidade interage com a história da arte na atualidade?", options: [
+                { text: "Ignora completamente a arte focando apenas no produto.", isCorrect: false },
+                { text: "Apropria-se da arte pela imitação de estilos e justaposição, transferindo valores culturais como beleza e nobreza ao produto.", isCorrect: true },
+                { text: "Por lei, é proibida de usar referências ao Renascimento.", isCorrect: false },
+                { text: "Utiliza unicamente a arte da pré-história.", isCorrect: false }
+            ], explanation: "A publicidade 'recanibaliza' a arte, citando quadros clássicos e movimentos para agregar prestígio (status) ao que está sendo vendido." },
+            { id: 21, topic: "Texto 01", text: "A autora divide o desenvolvimento da imagem em três grandes paradigmas: pré-fotográfico, fotográfico e pós-fotográfico. O que define uma imagem pós-fotográfica?", options: [
+                { text: "Imagens geradas unicamente por processos químicos manuais.", isCorrect: false },
+                { text: "Captações em película de objetos que obrigatoriamente existem no mundo.", isCorrect: false },
+                { text: "Imagens sintéticas, infográficas, calculadas pelo computador, não precisando do rastro da luz de um objeto real.", isCorrect: true },
+                { text: "Pinturas impressionistas.", isCorrect: false }
+            ], explanation: "O paradigma pós-fotográfico lida com a imagem digital/matemática gerada no computador (CGI), dissolvendo a certeza de que a imagem reflete algo que esteve de fato presente na lente." }
+        ];
+
+        const summaries = [
+            {
+                topic: "Aula 01",
+                title: "O que é Arte & Estética",
+                points: [
+                    "<strong>Arte:</strong> Forma de expressar sentimentos, contar o passado, refletir sobre o presente e entender nossa humanidade.",
+                    "<strong>Visão de mundo:</strong> A arte não precisa ser uma cópia fiel da realidade (ex: 'Abapuru').",
+                    "<strong>Estética:</strong> Ciência que estuda a técnica empregada e a recepção, problematizando conceitos do belo e do feio."
+                ]
+            },
+            {
+                topic: "Aula 02",
+                title: "Arte Pré-Histórica",
+                points: [
+                    "<strong>Pintura Rupestre:</strong> Função mágica simpática; desenhar o animal ajudava na caça/dominação. Materiais: sangue, carvão, minerais.",
+                    "<strong>Escultura:</strong> Vênus de Willendorf e Savignano simbolizavam a fertilidade feminina.",
+                    "<strong>Megalitos:</strong> Dólmens (túmulos mesa), Menires (pedras isoladas) e Cromeleques (santuários tipo Stonehenge)."
+                ]
+            },
+            {
+                topic: "Aula 03",
+                title: "Arte Egípcia",
+                points: [
+                    "<strong>Características:</strong> Arte anônima e padronizada regida pela religião e vida eterna.",
+                    "<strong>Lei da Frontalidade:</strong> Tronco e olhos de frente; cabeça e pernas de perfil. Regra rígida sem perspectiva.",
+                    "<strong>Escultura:</strong> Faraós esculpidos rígidos, sem emoção e frontais (imutáveis/imortais). Povo representado nas tarefas diárias.",
+                    "<strong>Cerâmica:</strong> Vasos canópicos guardavam órgãos; Ushebtis (miniaturas) serviam no além."
+                ]
+            },
+            {
+                topic: "Aula 04",
+                title: "Arte Grega",
+                points: [
+                    "<strong>Valores:</strong> Racionalismo, equilíbrio, harmonia e o homem no centro.",
+                    "<strong>Escultura:</strong> Vai da rigidez (Kouros arcaicos) ao ápice anatômico (Clássico: movimento, contraposto) até a expressividade dramática teatral (Helenístico).",
+                    "<strong>Arquitetura:</strong> 3 ordens clássicas: Dórica (simples), Jônica (volutas) e Coríntia (folhas detalhadas). Os teatros usavam a acústica das encostas naturais."
+                ]
+            },
+            {
+                topic: "Aula 05",
+                title: "Arte Romana",
+                points: [
+                    "<strong>Arquitetura utilitária:</strong> Herança dos arcos e abóbadas etruscos para criar aquedutos, pontes, termas, fóruns e o Coliseu.",
+                    "<strong>Bustos:</strong> Diferente do ideal grego, a escultura romana busca o realismo severo da fisionomia (idade, rugas).",
+                    "<strong>Afrescos e Mosaicos:</strong> Preservados em Pompeia e Herculano, traziam cenas eróticas, cotidianas e mitos."
+                ]
+            },
+            {
+                topic: "Aula 06",
+                title: "Arte Gótica",
+                points: [
+                    "<strong>Arquitetura das Catedrais:</strong> Paredes finas sustentadas por contrafortes e arcobotantes, buscando as nuvens com pináculos e torres (verticalidade).",
+                    "<strong>Luminosidade:</strong> Uso de grandes Vitrais coloridos e Rosáceas para a luz divina entrar na igreja.",
+                    "<strong>Gárgulas:</strong> Desaguadouros de água com formas grotescas e monstruosas para espantar maus espíritos."
+                ]
+            },
+            {
+                topic: "Aula 07",
+                title: "Renascimento",
+                points: [
+                    "<strong>Humanismo e Ciência:</strong> Fim do teocentrismo medieval. O homem ganha destaque (Antropocentrismo).",
+                    "<strong>Mecenato:</strong> Nobreza e rica burguesia encomendavam e patrocinavam arte para ganhar prestígio.",
+                    "<strong>Inovação:</strong> Surgimento da perspectiva com ponto de fuga, sfumato (Da Vinci) e da Prensa Móvel de Gutenberg que impulsionou o conhecimento."
+                ]
+            },
+            {
+                topic: "Aula 08",
+                title: "Maneirismo e Barroco",
+                points: [
+                    "<strong>Maneirismo:</strong> Corpos alongados, composições tensas rompendo com o rigor clássico do Renascimento.",
+                    "<strong>Barroco:</strong> Arte a serviço da Contrarreforma. Apelo à emoção intensa, com pesados contrastes de luz (claro-escuro) e excessos dramáticos.",
+                    "<strong>No Brasil:</strong> O auge do Barroco Mineiro se dá na escultura em pedra-sabão pelas mãos de Aleijadinho."
+                ]
+            },
+            {
+                topic: "Aula 09",
+                title: "Rococó e Neoclassicismo",
+                points: [
+                    "<strong>Rococó:</strong> Tons pastéis, curvas decorativas, estilo cortesão focado no luxo, delicadeza e temas mundanos.",
+                    "<strong>Neoclassicismo:</strong> Resposta purista ligada à Revolução Francesa. Resgata a virtude heroica romana, linhas retas e civismo. Chega ao Brasil (1816) com a Missão Artística Francesa (Debret, Taunay)."
+                ]
+            },
+            {
+                topic: "Aula 19",
+                title: "Arte Contemporânea",
+                points: [
+                    "<strong>Prioridade:</strong> O conceito vale mais que a técnica física do objeto.",
+                    "<strong>Land Art:</strong> A natureza como tela de obras colossais e efêmeras.",
+                    "<strong>Happening vs Performance:</strong> O happening exige improviso e pode envolver o público. A performance possui script/roteiro da ação."
+                ]
+            },
+            {
+                topic: "Texto 01",
+                title: "A Convergência entre Arte e Comunicação",
+                points: [
+                    "<strong>Impacto Tecnológico:</strong> A reprodutibilidade quebrou a aura sagrada da arte, mas abriu portas para um continuum sem hierarquias rígidas entre cultura erudita e de massa.",
+                    "<strong>Pop Art e Publicidade:</strong> A arte assimilou as embalagens de supermercado e as mídias reciclam os quadros clássicos para endossar status aos produtos.",
+                    "<strong>Imagens Pós-Fotográficas:</strong> Na era digital, as simulações numéricas (CGI) quebram o elo com a realidade física que a foto original exigia."
+                ]
+            }
+        ];
+
+        // LOGIC
+        let currentMode = 'simulado';
+        let currentFilter = 'Todas';
+        let answeredState = {}; 
+
+        const chipsWrapper = document.getElementById('chips-wrapper');
+        const simuladoView = document.getElementById('simulado-view');
+        const resumoView = document.getElementById('resumo-view');
+        const progressLabel = document.getElementById('progress-label');
+        const progressFill = document.getElementById('progress-fill');
+        const statusBadge = document.getElementById('status-badge');
+
+        function init() {
+            renderChips();
+            renderSimulado();
+            renderResumo();
+            updateProgress();
+            checkScrollArrows();
+        }
+
+        function switchView(mode) {
+            currentMode = mode;
+            // Alterna o estilo de active no Sidebar Icons
+            document.getElementById('nav-simulado').classList.toggle('active', mode === 'simulado');
+            document.getElementById('nav-resumo').classList.toggle('active', mode === 'resumo');
+            
+            if(mode === 'simulado') {
+                simuladoView.classList.remove('hidden');
+                resumoView.classList.add('hidden');
+                document.getElementById('progress-container').style.display = 'flex';
+            } else {
+                simuladoView.classList.add('hidden');
+                resumoView.classList.remove('hidden');
+                document.getElementById('progress-container').style.display = 'none';
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function renderChips() {
+            chipsWrapper.innerHTML = '';
+            topics.forEach((topic) => {
+                const btn = document.createElement('button');
+                btn.className = `chip ${topic === currentFilter ? 'active' : ''}`;
+                btn.textContent = topic;
+                btn.onclick = () => {
+                    currentFilter = topic;
+                    renderChips();
+                    const btnRect = btn.getBoundingClientRect();
+                    const wrapRect = chipsWrapper.getBoundingClientRect();
+                    const scrollPos = btn.offsetLeft - wrapRect.width/2 + btnRect.width/2;
+                    chipsWrapper.scrollTo({left: scrollPos, behavior: 'smooth'});
+                    
+                    renderSimulado();
+                    renderResumo();
+                    updateProgress();
+                };
+                chipsWrapper.appendChild(btn);
+            });
+        }
+
+        function renderSimulado() {
+            simuladoView.innerHTML = '';
+            const filtered = currentFilter === 'Todas' ? questions : questions.filter(q => q.topic === currentFilter);
+            
+            if(filtered.length === 0) {
+                simuladoView.innerHTML = '<div class="card"><p style="text-align:center; color: var(--text-muted)">Nenhuma questão disponível.</p></div>';
+                return;
+            }
+
+            let allAnswered = true;
+            let correctCount = 0;
+
+            filtered.forEach((q, index) => {
+                const isAnswered = answeredState[q.id] !== undefined;
+                if (!isAnswered) allAnswered = false;
+                if (isAnswered && q.options[answeredState[q.id]].isCorrect) correctCount++;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                let optionsHtml = '';
+                const letters = ['A', 'B', 'C', 'D'];
+                
+                q.options.forEach((opt, oIdx) => {
+                    let optClass = 'option';
+                    if (isAnswered) {
+                        optClass += ' locked';
+                        if (opt.isCorrect) optClass += ' correct';
+                        else if (answeredState[q.id] === oIdx) optClass += ' incorrect';
+                    }
+
+                    optionsHtml += `
+                        <button class="${optClass}" onclick="handleAnswer(${q.id}, ${oIdx})">
+                            <div class="opt-letter">${letters[oIdx]}</div>
+                            <div class="opt-text">${opt.text}</div>
+                        </button>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="q-header">
+                        <span>Questão ${index + 1}</span>
+                        <span>${q.topic}</span>
+                    </div>
+                    <div class="q-text">${q.text}</div>
+                    <div class="options">${optionsHtml}</div>
+                    <div class="explanation" style="display: ${isAnswered ? 'block' : 'none'}">
+                        <strong>Feedback:</strong> ${q.explanation}
+                    </div>
+                `;
+                simuladoView.appendChild(card);
+            });
+
+            if (allAnswered && filtered.length > 0) {
+                const percent = Math.round((correctCount / filtered.length) * 100);
+                let verdict = "Continue praticando!";
+                if (percent >= 80) verdict = "Excelência em Arte e Mídia!";
+                else if (percent >= 50) verdict = "Bom conhecimento da base!";
+
+                const resultHtml = `
+                    <div class="card result-screen">
+                        <div class="result-circle">${percent}%</div>
+                        <div class="result-text">${verdict}<br><br>Você acertou ${correctCount} de ${filtered.length} em <strong>${currentFilter}</strong>.</div>
+                        <button class="btn-primary" onclick="resetCurrentFilter()">Refazer ${currentFilter}</button>
+                    </div>
+                `;
+                simuladoView.insertAdjacentHTML('beforeend', resultHtml);
+            }
+        }
+
+        function handleAnswer(qId, oIdx) {
+            if (answeredState[qId] !== undefined) return;
+            answeredState[qId] = oIdx;
+            renderSimulado();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const filtered = currentFilter === 'Todas' ? questions : questions.filter(q => q.topic === currentFilter);
+            if(filtered.length === 0) {
+                progressLabel.textContent = `Módulo ${currentFilter}: 0/0`;
+                progressFill.style.width = '0%';
+                statusBadge.textContent = "Vazio";
+                statusBadge.style.color = "var(--text-muted)";
+                statusBadge.style.background = "rgba(255,255,255,0.05)";
+                statusBadge.style.borderColor = "var(--glass-border)";
+                return;
+            }
+
+            let answeredCount = 0;
+            filtered.forEach(q => { if (answeredState[q.id] !== undefined) answeredCount++; });
+
+            progressLabel.innerHTML = `Módulo <strong>${currentFilter}</strong>: ${answeredCount} / ${filtered.length}`;
+            progressFill.style.width = `${(answeredCount / filtered.length) * 100}%`;
+            
+            if (answeredCount === 0) {
+                statusBadge.textContent = "Não iniciado";
+                statusBadge.style.color = "var(--text-muted)";
+                statusBadge.style.background = "rgba(255,255,255,0.05)";
+                statusBadge.style.borderColor = "var(--glass-border)";
+            } else if (answeredCount === filtered.length) {
+                statusBadge.textContent = "Concluído";
+                statusBadge.style.color = "var(--accent-green)";
+                statusBadge.style.background = "rgba(16, 185, 129, 0.15)";
+                statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+            } else {
+                statusBadge.textContent = "Em andamento";
+                statusBadge.style.color = "var(--accent-amber)";
+                statusBadge.style.background = "rgba(245, 158, 11, 0.15)";
+                statusBadge.style.borderColor = "rgba(245, 158, 11, 0.3)";
+            }
+        }
+
+        function resetCurrentFilter() {
+            const filtered = currentFilter === 'Todas' ? questions : questions.filter(q => q.topic === currentFilter);
+            filtered.forEach(q => delete answeredState[q.id]);
+            renderSimulado();
+            updateProgress();
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function renderResumo() {
+            resumoView.innerHTML = '';
+            const filtered = currentFilter === 'Todas' ? summaries : summaries.filter(s => s.topic === currentFilter);
+            
+            if(filtered.length === 0) {
+                resumoView.innerHTML = '<div class="r-card"><p style="text-align:center; color: var(--text-muted)">Nenhum material de apoio aqui.</p></div>';
+                return;
+            }
+
+            filtered.forEach(s => {
+                let lis = s.points.map(p => `<li>${p}</li>`).join('');
+                const card = document.createElement('div');
+                card.className = 'r-card';
+                card.innerHTML = `
+                    <div class="r-header">${s.topic}: ${s.title}</div>
+                    <div class="r-content"><ul>${lis}</ul></div>
+                `;
+                resumoView.appendChild(card);
+            });
+        }
+
+        chipsWrapper.addEventListener('scroll', checkScrollArrows);
+        function scrollChips(amount) { chipsWrapper.scrollBy({ left: amount, behavior: 'smooth' }); }
+        function checkScrollArrows() {
+            const maxScroll = chipsWrapper.scrollWidth - chipsWrapper.clientWidth;
+            document.querySelector('.nav-left').classList.toggle('visible', chipsWrapper.scrollLeft > 5);
+            document.querySelector('.nav-right').classList.toggle('visible', chipsWrapper.scrollLeft < maxScroll - 5);
+        }
+        chipsWrapper.addEventListener('wheel', (evt) => {
+            evt.preventDefault();
+            chipsWrapper.scrollBy({ left: evt.deltaY < 0 ? -60 : 60, behavior: 'auto' });
+        });
+
+        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('resize', checkScrollArrows);
+    </script>
+</body>
+</html>
